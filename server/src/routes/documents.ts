@@ -1,5 +1,7 @@
 import { Router } from "express";
+import { eq } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
+import { documents } from "@paperclipai/db";
 import {
   createDocumentSchema,
   updateDocumentSchema,
@@ -52,6 +54,23 @@ export function documentRoutes(db: Db) {
       res.status(201).json(doc);
     },
   );
+
+  // Get document by source issue ID (for agents to find their doc from their task)
+  router.get("/issues/:issueId/document", async (req, res) => {
+    const issueId = req.params.issueId as string;
+    const docs = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.issueId, issueId))
+      .then((rows) => rows[0] ?? null);
+    if (!docs) {
+      res.status(404).json({ error: "No document found for this issue" });
+      return;
+    }
+    assertCompanyAccess(req, docs.companyId);
+    const full = await svc.getById(docs.id);
+    res.json(full);
+  });
 
   // Get document with links
   router.get("/documents/:id", async (req, res) => {

@@ -114,31 +114,71 @@ DELETE /api/documents/:id/issues/:issueId
 ### Linked Documents
 On issue detail and goal detail pages, a "Linked Documents" section shows all documents linked to that issue/goal.
 
+### Get document by issue
+```
+GET /api/issues/:issueId/document
+```
+Returns the document linked to a specific issue. Useful for agents to find their doc from their assigned task.
+
 ## Agent Workflow
 
-Agents interact with documents through the issue system they already know:
+Agents interact with documents in two ways:
+
+### 1. Direct document editing (primary)
+Agents can read and write document content directly via the API:
+
+```bash
+# Find the document for your assigned issue
+GET /api/issues/{issueId}/document
+Authorization: Bearer $PAPERCLIP_API_KEY
+
+# Read the current content
+GET /api/documents/{docId}
+Authorization: Bearer $PAPERCLIP_API_KEY
+
+# Update the document content directly
+PATCH /api/documents/{docId}
+Authorization: Bearer $PAPERCLIP_API_KEY
+{ "content": { "type": "doc", "content": [...tiptap JSON...] } }
+
+# Update just the title
+PATCH /api/documents/{docId}
+Authorization: Bearer $PAPERCLIP_API_KEY
+{ "title": "March Finance Report — Final" }
+```
+
+### 2. Comment-based collaboration
+Agents can also discuss changes via the source issue's comment thread:
 
 1. Board creates issue: "Write the family finance summary for March"
 2. Board creates document from that issue
 3. Agent is assigned the issue
-4. Agent reads the issue, fetches the document via API, edits the content
-5. Agent posts a comment on the issue: "Updated the doc with March expenses"
-6. Board sees the comment in the doc sidebar, reviews the changes
+4. Agent fetches the doc via `GET /api/issues/{issueId}/document`
+5. Agent edits the content via `PATCH /api/documents/{docId}`
+6. Agent posts a comment on the issue: "Updated the doc with March expenses"
+7. Board sees the comment in the doc sidebar, reviews the changes
+8. Board comments "Add the Polymarket PnL section"
+9. Agent wakes up, reads the comment, edits the doc again
 
-### Agent API Usage
+### Agent document editing flow (recommended)
 
-Agents can also create/edit documents programmatically:
+```
+1. GET /api/issues/{issueId}/document          → get the doc
+2. Read doc.content (tiptap JSON)              → understand current state
+3. Modify the content                          → make your edits
+4. PATCH /api/documents/{docId} { content }    → save changes
+5. POST /api/issues/{issueId}/comments         → tell the board what you changed
+```
+
+### Creating documents (agents)
 
 ```bash
-# Create a document from an issue
 POST /api/companies/{companyId}/documents
 Authorization: Bearer $PAPERCLIP_API_KEY
-{ "title": "March Finance Report", "issueId": "{issueId}" }
-
-# Update document content
-PATCH /api/documents/{docId}
-Authorization: Bearer $PAPERCLIP_API_KEY
-{ "content": { "type": "doc", "content": [...] } }
+{
+  "title": "March Finance Report",
+  "issueId": "{issueId}"
+}
 ```
 
 ## Editor
