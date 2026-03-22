@@ -64,6 +64,13 @@ export {
 } from "./constants.js";
 
 export type {
+  Document,
+  DocumentGoalLink,
+  DocumentIssueLink,
+  DocumentWithLinks,
+} from "./types/index.js";
+
+export type {
   Company,
   Agent,
   AgentPermissions,
@@ -183,6 +190,14 @@ export {
   updateGoalSchema,
   type CreateGoal,
   type UpdateGoal,
+  createDocumentSchema,
+  updateDocumentSchema,
+  linkDocumentGoalSchema,
+  linkDocumentIssueSchema,
+  type CreateDocument,
+  type UpdateDocument,
+  type LinkDocumentGoal,
+  type LinkDocumentIssue,
   createApprovalSchema,
   resolveApprovalSchema,
   requestApprovalRevisionSchema,

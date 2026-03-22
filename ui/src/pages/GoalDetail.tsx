@@ -16,6 +16,7 @@ import { InlineEditor } from "../components/InlineEditor";
 import { EntityRow } from "../components/EntityRow";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { projectUrl } from "../lib/utils";
+import { LinkedDocuments } from "../components/LinkedDocuments";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
@@ -191,6 +192,10 @@ export function GoalDetail() {
           )}
         </TabsContent>
       </Tabs>
+
+      {resolvedCompanyId && goalId && (
+        <LinkedDocuments companyId={resolvedCompanyId} goalId={goalId} />
+      )}
     </div>
   );
 }
