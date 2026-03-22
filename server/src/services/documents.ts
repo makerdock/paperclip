@@ -62,21 +62,31 @@ export function documentService(db: Db) {
       return { ...doc, goals, issues };
     },
 
-    create: (
+    create: async (
       companyId: string,
       data: {
         title: string;
+        issueId: string;
         content?: Record<string, unknown>;
         projectId?: string | null;
         createdByAgentId?: string | null;
         createdByUserId?: string | null;
       },
-    ) =>
-      db
+    ) => {
+      const doc = await db
         .insert(documents)
         .values({ ...data, companyId })
         .returning()
-        .then((rows) => rows[0]),
+        .then((rows) => rows[0]);
+      // Auto-link the creating issue
+      if (doc) {
+        await db
+          .insert(documentIssues)
+          .values({ documentId: doc.id, issueId: data.issueId })
+          .onConflictDoNothing();
+      }
+      return doc;
+    },
 
     update: (id: string, data: Partial<typeof documents.$inferInsert>) =>
       db

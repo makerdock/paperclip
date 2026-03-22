@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "documents" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"project_id" uuid,
+	"issue_id" uuid NOT NULL,
 	"title" text NOT NULL,
 	"content" jsonb DEFAULT '{}'::jsonb,
 	"created_by_agent_id" uuid,
@@ -30,6 +31,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "documents" ADD CONSTRAINT "documents_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "documents" ADD CONSTRAINT "documents_issue_id_issues_id_fk" FOREIGN KEY ("issue_id") REFERENCES "public"."issues"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -67,6 +74,8 @@ END $$;
 CREATE INDEX IF NOT EXISTS "documents_company_idx" ON "documents" USING btree ("company_id");
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "documents_project_idx" ON "documents" USING btree ("project_id");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "documents_issue_idx" ON "documents" USING btree ("issue_id");
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "document_goals_document_idx" ON "document_goals" USING btree ("document_id");
 --> statement-breakpoint

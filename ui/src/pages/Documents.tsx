@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@/lib/router";
 import { documentsApi } from "../api/documents";
 import { projectsApi } from "../api/projects";
+import { issuesApi } from "../api/issues";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { queryKeys } from "../lib/queryKeys";
@@ -80,6 +81,7 @@ export function Documents() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
+  const [showIssuePicker, setShowIssuePicker] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Documents" }]);
@@ -97,9 +99,21 @@ export function Documents() {
     enabled: !!selectedCompanyId,
   });
 
-  const handleNew = async () => {
+  const { data: issues } = useQuery({
+    queryKey: queryKeys.issues.list(selectedCompanyId!),
+    queryFn: () => issuesApi.list(selectedCompanyId!),
+    enabled: !!selectedCompanyId && showIssuePicker,
+  });
+
+  const handleNew = () => setShowIssuePicker(true);
+
+  const handleCreateWithIssue = async (issueId: string, issueTitle: string) => {
     if (!selectedCompanyId) return;
-    const doc = await documentsApi.create(selectedCompanyId, { title: "Untitled" });
+    const doc = await documentsApi.create(selectedCompanyId, {
+      title: `Doc: ${issueTitle}`,
+      issueId,
+    });
+    setShowIssuePicker(false);
     navigate(`/documents/${doc.id}`);
   };
 
@@ -115,10 +129,35 @@ export function Documents() {
     <div className="space-y-4">
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
+      {/* Issue picker modal */}
+      {showIssuePicker && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowIssuePicker(false)}>
+          <div className="bg-background border border-border rounded-lg p-4 w-96 max-h-96 overflow-y-auto" onClick={(e: any) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold mb-3">Select an issue for this document</h3>
+            <p className="text-xs text-muted-foreground mb-3">Documents are created from issues. Comment on the issue to request AI edits.</p>
+            <div className="space-y-1">
+              {(issues as any[])?.map((issue: any) => (
+                <button
+                  key={issue.id}
+                  onClick={() => handleCreateWithIssue(issue.id, issue.title)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-left hover:bg-accent/50 transition-colors"
+                >
+                  <span className="text-xs text-muted-foreground font-mono">{issue.identifier}</span>
+                  <span className="text-sm truncate">{issue.title}</span>
+                </button>
+              ))}
+              {(!issues || (issues as any[])?.length === 0) && (
+                <p className="text-xs text-muted-foreground">No issues found. Create an issue first.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {documents && documents.length === 0 && (
         <EmptyState
           icon={FileText}
-          message="No documents yet."
+          message="No documents yet. Create one from an issue."
           action="New Document"
           onAction={handleNew}
         />

@@ -2,6 +2,7 @@ export interface Document {
   id: string;
   companyId: string;
   projectId: string | null;
+  issueId: string;
   title: string;
   content: Record<string, unknown>;
   createdByAgentId: string | null;

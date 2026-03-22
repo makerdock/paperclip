@@ -11,7 +11,7 @@ export const documentsApi = {
     return api.get<Document[]>(`/companies/${companyId}/documents${qs ? `?${qs}` : ""}`);
   },
   get: (id: string) => api.get<DocumentWithLinks>(`/documents/${id}`),
-  create: (companyId: string, data: { title: string; content?: Record<string, unknown>; projectId?: string | null }) =>
+  create: (companyId: string, data: { title: string; issueId: string; content?: Record<string, unknown>; projectId?: string | null }) =>
     api.post<Document>(`/companies/${companyId}/documents`, data),
   update: (id: string, data: { title?: string; content?: Record<string, unknown>; projectId?: string | null }) =>
     api.patch<Document>(`/documents/${id}`, data),

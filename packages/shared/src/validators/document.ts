@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createDocumentSchema = z.object({
   title: z.string().min(1),
+  issueId: z.string().uuid(),
   content: z.record(z.unknown()).optional(),
   projectId: z.string().uuid().optional().nullable(),
 });
