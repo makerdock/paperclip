@@ -45,6 +45,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { ActivityEvent } from "@paperclipai/shared";
+import { LinkedDocuments } from "../components/LinkedDocuments";
 import type { Agent, IssueAttachment } from "@paperclipai/shared";
 
 type CommentReassignment = {
@@ -935,6 +936,9 @@ export function IssueDetail() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
+      {selectedCompanyId && issueId && (
+        <LinkedDocuments companyId={selectedCompanyId} issueId={issueId} />
+      )}
       <ScrollToBottom />
     </div>
   );

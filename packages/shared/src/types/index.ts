@@ -1,4 +1,5 @@
 export type { Company } from "./company.js";
+export type { Document, DocumentGoalLink, DocumentIssueLink, DocumentWithLinks } from "./document.js";
 export type {
   Agent,
   AgentPermissions,

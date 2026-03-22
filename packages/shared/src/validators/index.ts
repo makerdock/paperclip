@@ -84,6 +84,17 @@ export {
 } from "./goal.js";
 
 export {
+  createDocumentSchema,
+  updateDocumentSchema,
+  linkDocumentGoalSchema,
+  linkDocumentIssueSchema,
+  type CreateDocument,
+  type UpdateDocument,
+  type LinkDocumentGoal,
+  type LinkDocumentIssue,
+} from "./document.js";
+
+export {
   createApprovalSchema,
   resolveApprovalSchema,
   requestApprovalRevisionSchema,
