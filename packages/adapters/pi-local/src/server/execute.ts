@@ -13,6 +13,7 @@ import {
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
   ensurePathInEnv,
+  buildWakeContextNote,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -284,7 +285,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   });
 
   // User prompt is simple - just the rendered prompt template without instructions
-  const userPrompt = renderTemplate(promptTemplate, {
+  const renderedUserPrompt = renderTemplate(promptTemplate, {
     agentId: agent.id,
     companyId: agent.companyId,
     runId,
@@ -293,6 +294,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     run: { id: runId, source: "on_demand" },
     context,
   });
+  const wakeContextNote = buildWakeContextNote(context);
+  const userPrompt = wakeContextNote ? `${wakeContextNote}\n\n${renderedUserPrompt}` : renderedUserPrompt;
 
   const commandNotes = (() => {
     if (!resolvedInstructionsFilePath) return [] as string[];

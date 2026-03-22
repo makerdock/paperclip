@@ -13,6 +13,7 @@ import {
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
   ensurePathInEnv,
+  buildWakeContextNote,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -242,7 +243,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     run: { id: runId, source: "on_demand" },
     context,
   });
-  const prompt = `${instructionsPrefix}${renderedPrompt}`;
+  const wakeContextNote = buildWakeContextNote(context);
+  const prompt = `${instructionsPrefix}${wakeContextNote ? wakeContextNote + "\n\n" : ""}${renderedPrompt}`;
 
   const buildArgs = (resumeSessionId: string | null) => {
     const args = ["run", "--format", "json"];

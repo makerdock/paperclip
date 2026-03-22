@@ -15,6 +15,7 @@ import {
   ensurePathInEnv,
   parseObject,
   redactEnvForLogs,
+  buildWakeContextNote,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -289,7 +290,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   });
   const paperclipEnvNote = renderPaperclipEnvNote(env);
   const apiAccessNote = renderApiAccessNote(env);
-  const prompt = `${instructionsPrefix}${paperclipEnvNote}${apiAccessNote}${renderedPrompt}`;
+  const wakeContextNote = buildWakeContextNote(context);
+  const prompt = `${instructionsPrefix}${wakeContextNote ? wakeContextNote + "\n\n" : ""}${paperclipEnvNote}${apiAccessNote}${renderedPrompt}`;
 
   const buildArgs = (resumeSessionId: string | null) => {
     const args = ["--output-format", "stream-json"];

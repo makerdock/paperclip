@@ -16,6 +16,7 @@ import {
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
   ensurePathInEnv,
+  buildWakeContextNote,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -363,7 +364,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       `[paperclip] Claude session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${cwd}".\n`,
     );
   }
-  const prompt = renderTemplate(promptTemplate, {
+  const renderedPrompt = renderTemplate(promptTemplate, {
     agentId: agent.id,
     companyId: agent.companyId,
     runId,
@@ -372,6 +373,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     run: { id: runId, source: "on_demand" },
     context,
   });
+  const wakeContextNote = buildWakeContextNote(context);
+  const prompt = wakeContextNote ? `${wakeContextNote}\n\n${renderedPrompt}` : renderedPrompt;
 
   const buildClaudeArgs = (resumeSessionId: string | null) => {
     const args = ["--print", "-", "--output-format", "stream-json", "--verbose"];

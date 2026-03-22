@@ -95,6 +95,73 @@ export function renderTemplate(template: string, data: Record<string, unknown>) 
   return template.replace(/{{\s*([a-zA-Z0-9_.-]+)\s*}}/g, (_, path) => resolvePathValue(data, path));
 }
 
+/**
+ * Build a human-readable wake context note from the execution context.
+ * This ensures agents receiving a resumed session know *why* they were
+ * woken and what triggered the run, even when the bootstrap prompt is
+ * skipped on `--resume`.
+ */
+export function buildWakeContextNote(context: Record<string, unknown>): string {
+  const wakeReason = typeof context.wakeReason === "string" ? context.wakeReason.trim() : "";
+  if (!wakeReason) return "";
+
+  const taskId = typeof context.taskId === "string" ? context.taskId.trim() : "";
+  const issueId = typeof context.issueId === "string" ? context.issueId.trim() : "";
+  const wakeCommentId =
+    typeof context.wakeCommentId === "string" ? context.wakeCommentId.trim() : "";
+  const approvalId = typeof context.approvalId === "string" ? context.approvalId.trim() : "";
+  const approvalStatus =
+    typeof context.approvalStatus === "string" ? context.approvalStatus.trim() : "";
+  const effectiveIssueId = taskId || issueId;
+
+  const lines: string[] = ["[Paperclip Wake Context]"];
+
+  switch (wakeReason) {
+    case "issue_commented":
+    case "issue_comment_mentioned":
+      lines.push("A new comment was posted on your task.");
+      if (effectiveIssueId) lines.push(`Issue ID: ${effectiveIssueId}`);
+      if (wakeCommentId) lines.push(`Comment ID: ${wakeCommentId}`);
+      if (effectiveIssueId && wakeCommentId) {
+        lines.push(
+          `Action: Fetch the comment using GET /api/issues/${effectiveIssueId}/comments/${wakeCommentId} and respond appropriately. Post your response as a new comment on the issue.`,
+        );
+      } else {
+        lines.push("Action: Check the issue and respond to the latest comment.");
+      }
+      break;
+
+    case "issue_assigned":
+      lines.push("A task was assigned to you.");
+      if (effectiveIssueId) lines.push(`Issue ID: ${effectiveIssueId}`);
+      if (effectiveIssueId) {
+        lines.push(
+          `Action: Fetch the issue using GET /api/issues/${effectiveIssueId} to understand the task, then begin working on it following the Paperclip heartbeat procedure.`,
+        );
+      } else {
+        lines.push("Action: Check your assignments and begin working on the assigned task.");
+      }
+      break;
+
+    case "approval_resolved":
+      lines.push("An approval was resolved.");
+      if (approvalId) lines.push(`Approval ID: ${approvalId}`);
+      if (approvalStatus) lines.push(`Status: ${approvalStatus}`);
+      if (effectiveIssueId) lines.push(`Related Issue ID: ${effectiveIssueId}`);
+      lines.push("Action: Review the approval outcome and update any related issues accordingly.");
+      break;
+
+    default:
+      lines.push(`Wake reason: ${wakeReason}`);
+      if (effectiveIssueId) lines.push(`Issue ID: ${effectiveIssueId}`);
+      if (wakeCommentId) lines.push(`Comment ID: ${wakeCommentId}`);
+      lines.push("Action: Check your assignments and continue your Paperclip work.");
+      break;
+  }
+
+  return lines.join("\n");
+}
+
 export function redactEnvForLogs(env: Record<string, string>): Record<string, string> {
   const redacted: Record<string, string> = {};
   for (const [key, value] of Object.entries(env)) {
