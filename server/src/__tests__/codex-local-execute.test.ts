@@ -331,4 +331,56 @@ describe("codex execute", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("includes the wake comment body in the prompt when present", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-codex-execute-wake-comment-"));
+    const workspace = path.join(root, "workspace");
+    const commandPath = path.join(root, "codex");
+    const capturePath = path.join(root, "capture.json");
+    await fs.mkdir(workspace, { recursive: true });
+    await writeFakeCodexCommand(commandPath);
+
+    try {
+      const result = await execute({
+        runId: "run-wake-comment",
+        agent: {
+          id: "agent-1",
+          companyId: "company-1",
+          name: "Codex Coder",
+          adapterType: "codex_local",
+          adapterConfig: {},
+        },
+        runtime: {
+          sessionId: null,
+          sessionParams: null,
+          sessionDisplayId: null,
+          taskKey: null,
+        },
+        config: {
+          command: commandPath,
+          cwd: workspace,
+          env: {
+            PAPERCLIP_TEST_CAPTURE_PATH: capturePath,
+          },
+          promptTemplate: "Follow the paperclip heartbeat.",
+        },
+        context: {
+          wakeReason: "issue_commented",
+          paperclipWakeCommentBody: "is smriti onboarded properly? kt and everything she needs to know is sorted?",
+        },
+        authToken: "run-jwt-token",
+        onLog: async () => {},
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.errorMessage).toBeNull();
+
+      const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
+      expect(capture.prompt).toContain("Paperclip wake comment (issue_commented):");
+      expect(capture.prompt).toContain("is smriti onboarded properly? kt and everything she needs to know is sorted?");
+      expect(capture.prompt).toContain("Follow the paperclip heartbeat.");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });
