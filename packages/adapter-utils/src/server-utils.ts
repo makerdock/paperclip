@@ -260,6 +260,17 @@ export function buildWakeContextNote(context: Record<string, unknown>): string {
   return lines.join("\n");
 }
 
+export function buildWakeCommentPromptSection(contextRaw: unknown) {
+  const context = parseObject(contextRaw);
+  const wakeCommentBody = asString(context.paperclipWakeCommentBody, "").trim();
+  if (!wakeCommentBody) return "";
+  const wakeReason = asString(context.wakeReason, "").trim();
+  const heading = wakeReason
+    ? `Paperclip wake comment (${wakeReason}):`
+    : "Paperclip wake comment:";
+  return `${heading}\n${wakeCommentBody}`;
+}
+
 export function redactEnvForLogs(env: Record<string, string>): Record<string, string> {
   const redacted: Record<string, string> = {};
   for (const [key, value] of Object.entries(env)) {
