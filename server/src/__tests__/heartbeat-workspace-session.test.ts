@@ -3,6 +3,7 @@ import type { agents } from "@paperclipai/db";
 import { resolveDefaultAgentWorkspaceDir } from "../home-paths.js";
 import {
   formatRuntimeWorkspaceWarningLog,
+  hydrateWakeCommentPromptContext,
   prioritizeProjectWorkspaceCandidatesForRun,
   parseSessionCompactionPolicy,
   resolveRuntimeSessionParamsForWorkspace,
@@ -188,6 +189,45 @@ describe("formatRuntimeWorkspaceWarningLog", () => {
       stream: "stdout",
       chunk: "[paperclip] Using fallback workspace\n",
     });
+  });
+});
+
+describe("hydrateWakeCommentPromptContext", () => {
+  it("loads the wake comment body into prompt context when the comment belongs to the issue", async () => {
+    const contextSnapshot: Record<string, unknown> = {
+      wakeReason: "issue_commented",
+      wakeCommentId: "comment-1",
+    };
+
+    await hydrateWakeCommentPromptContext({
+      contextSnapshot,
+      issueId: "issue-1",
+      getComment: async (commentId) => ({
+        issueId: commentId === "comment-1" ? "issue-1" : null,
+        body: "Please check Smriti onboarding.",
+      }),
+    });
+
+    expect(contextSnapshot.paperclipWakeCommentBody).toBe("Please check Smriti onboarding.");
+  });
+
+  it("clears stale wake comment body when the comment is missing or belongs elsewhere", async () => {
+    const contextSnapshot: Record<string, unknown> = {
+      wakeReason: "issue_commented",
+      wakeCommentId: "comment-2",
+      paperclipWakeCommentBody: "stale",
+    };
+
+    await hydrateWakeCommentPromptContext({
+      contextSnapshot,
+      issueId: "issue-1",
+      getComment: async () => ({
+        issueId: "issue-2",
+        body: "Wrong thread",
+      }),
+    });
+
+    expect(contextSnapshot.paperclipWakeCommentBody).toBeUndefined();
   });
 });
 

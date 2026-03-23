@@ -532,6 +532,27 @@ function deriveCommentId(
   );
 }
 
+export async function hydrateWakeCommentPromptContext(input: {
+  contextSnapshot: Record<string, unknown>;
+  issueId: string | null;
+  getComment: (commentId: string) => Promise<{ issueId: string | null; body: string | null } | null>;
+}) {
+  const { contextSnapshot, issueId, getComment } = input;
+  delete contextSnapshot.paperclipWakeCommentBody;
+  if (!issueId) return;
+
+  const wakeCommentId = deriveCommentId(contextSnapshot, null);
+  if (!wakeCommentId) return;
+
+  const wakeComment = await getComment(wakeCommentId);
+  if (!wakeComment || wakeComment.issueId !== issueId) return;
+
+  const wakeCommentBody = readNonEmptyString(wakeComment.body);
+  if (!wakeCommentBody) return;
+
+  contextSnapshot.paperclipWakeCommentBody = wakeCommentBody;
+}
+
 function enrichWakeContextSnapshot(input: {
   contextSnapshot: Record<string, unknown>;
   reason: string | null;
@@ -2385,6 +2406,25 @@ export function heartbeatService(db: Db) {
             adapterType: agent.adapterType,
           },
           "local agent jwt secret missing or invalid; running without injected PAPERCLIP_API_KEY",
+        );
+      }
+      try {
+        await hydrateWakeCommentPromptContext({
+          contextSnapshot: context,
+          issueId,
+          getComment: async (commentId) => {
+            const comment = await issuesSvc.getComment(commentId);
+            if (!comment) return null;
+            return {
+              issueId: comment.issueId,
+              body: comment.body,
+            };
+          },
+        });
+      } catch (err) {
+        await onLog(
+          "stderr",
+          `[paperclip] Failed to load wake comment for prompt context: ${err instanceof Error ? err.message : String(err)}\n`,
         );
       }
       const adapterResult = await adapter.execute({
