@@ -378,6 +378,7 @@ describe("codex execute", () => {
       const capture = JSON.parse(await fs.readFile(capturePath, "utf8")) as CapturePayload;
       expect(capture.prompt).toContain("Paperclip wake comment (issue_commented):");
       expect(capture.prompt).toContain("is smriti onboarded properly? kt and everything she needs to know is sorted?");
+      expect(capture.prompt.match(/Paperclip wake comment \(issue_commented\):/g)).toHaveLength(1);
       expect(capture.prompt).toContain("Follow the paperclip heartbeat.");
     } finally {
       await fs.rm(root, { recursive: true, force: true });

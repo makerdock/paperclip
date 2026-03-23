@@ -465,7 +465,6 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     sessionHandoffNote,
     wakeContextNote,
     wakeCommentNote,
-    wakeCommentNote,
     renderedPrompt,
   ]);
   const promptMetrics = {
