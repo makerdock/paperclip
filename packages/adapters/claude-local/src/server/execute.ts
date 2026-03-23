@@ -11,6 +11,7 @@ import {
   asStringArray,
   parseObject,
   parseJson,
+  buildWakeCommentPromptSection,
   buildPaperclipEnv,
   readPaperclipRuntimeSkillEntries,
   joinPromptSections,
@@ -394,16 +395,20 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
   const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
+  const wakeCommentNote = buildWakeCommentPromptSection(context);
   const prompt = joinPromptSections([
     renderedBootstrapPrompt,
     sessionHandoffNote,
     wakeContextNote,
+    wakeCommentNote,
     renderedPrompt,
   ]);
   const promptMetrics = {
     promptChars: prompt.length,
     bootstrapPromptChars: renderedBootstrapPrompt.length,
     sessionHandoffChars: sessionHandoffNote.length,
+    wakeContextChars: wakeContextNote.length,
+    wakeCommentChars: wakeCommentNote.length,
     heartbeatPromptChars: renderedPrompt.length,
   };
 

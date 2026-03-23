@@ -20,6 +20,7 @@ import {
   renderTemplate,
   joinPromptSections,
   buildWakeContextNote,
+  buildWakeCommentPromptSection,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
 import { DEFAULT_CURSOR_LOCAL_MODEL } from "../index.js";
@@ -358,11 +359,14 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
   const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
   const paperclipEnvNote = renderPaperclipEnvNote(env);
+  const wakeCommentNote = buildWakeCommentPromptSection(context);
   const prompt = joinPromptSections([
     instructionsPrefix,
     renderedBootstrapPrompt,
     sessionHandoffNote,
     wakeContextNote,
+    wakeCommentNote,
+    wakeCommentNote,
     paperclipEnvNote,
     renderedPrompt,
   ]);
@@ -371,6 +375,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     instructionsChars,
     bootstrapPromptChars: renderedBootstrapPrompt.length,
     sessionHandoffChars: sessionHandoffNote.length,
+    wakeContextChars: wakeContextNote.length,
+    wakeCommentChars: wakeCommentNote.length,
     runtimeNoteChars: paperclipEnvNote.length,
     heartbeatPromptChars: renderedPrompt.length,
   };
