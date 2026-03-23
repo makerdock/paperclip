@@ -11,6 +11,7 @@ import {
   buildPaperclipEnv,
   joinPromptSections,
   buildWakeContextNote,
+  buildWakeCommentPromptSection,
   redactEnvForLogs,
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
@@ -265,11 +266,14 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
   const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
+  const wakeCommentNote = buildWakeCommentPromptSection(context);
   const prompt = joinPromptSections([
     instructionsPrefix,
     renderedBootstrapPrompt,
     sessionHandoffNote,
     wakeContextNote,
+    wakeCommentNote,
+    wakeCommentNote,
     renderedPrompt,
   ]);
   const promptMetrics = {
@@ -277,6 +281,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     instructionsChars: instructionsPrefix.length,
     bootstrapPromptChars: renderedBootstrapPrompt.length,
     sessionHandoffChars: sessionHandoffNote.length,
+    wakeContextChars: wakeContextNote.length,
+    wakeCommentChars: wakeCommentNote.length,
     heartbeatPromptChars: renderedPrompt.length,
   };
 

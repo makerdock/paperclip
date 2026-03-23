@@ -19,6 +19,7 @@ import {
   readPaperclipRuntimeSkillEntries,
   resolvePaperclipDesiredSkillNames,
   removeMaintainerOnlySkillSymlinks,
+  buildWakeCommentPromptSection,
   renderTemplate,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
@@ -303,10 +304,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : "";
   const wakeContextNote = runtimeSessionId ? buildWakeContextNote(context) : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+  const wakeCommentNote = buildWakeCommentPromptSection(context);
   const userPrompt = joinPromptSections([
     renderedBootstrapPrompt,
     sessionHandoffNote,
     wakeContextNote,
+    wakeCommentNote,
+    wakeCommentNote,
     renderedHeartbeatPrompt,
   ]);
   const promptMetrics = {
@@ -314,6 +318,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     promptChars: userPrompt.length,
     bootstrapPromptChars: renderedBootstrapPrompt.length,
     sessionHandoffChars: sessionHandoffNote.length,
+    wakeContextChars: wakeContextNote.length,
+    wakeCommentChars: wakeCommentNote.length,
     heartbeatPromptChars: renderedHeartbeatPrompt.length,
   };
 
