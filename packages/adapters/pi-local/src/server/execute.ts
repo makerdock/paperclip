@@ -310,7 +310,6 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     sessionHandoffNote,
     wakeContextNote,
     wakeCommentNote,
-    wakeCommentNote,
     renderedHeartbeatPrompt,
   ]);
   const promptMetrics = {
