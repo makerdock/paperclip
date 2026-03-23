@@ -19,6 +19,7 @@ import {
   removeMaintainerOnlySkillSymlinks,
   renderTemplate,
   joinPromptSections,
+  buildWakeContextNote,
   runChildProcess,
 } from "@paperclipai/adapter-utils/server-utils";
 import { DEFAULT_CURSOR_LOCAL_MODEL } from "../index.js";
@@ -355,11 +356,13 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       ? renderTemplate(bootstrapPromptTemplate, templateData).trim()
       : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+  const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
   const paperclipEnvNote = renderPaperclipEnvNote(env);
   const prompt = joinPromptSections([
     instructionsPrefix,
     renderedBootstrapPrompt,
     sessionHandoffNote,
+    wakeContextNote,
     paperclipEnvNote,
     renderedPrompt,
   ]);

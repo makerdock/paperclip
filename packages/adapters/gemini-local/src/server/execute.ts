@@ -14,6 +14,7 @@ import {
   ensureCommandResolvable,
   ensurePaperclipSkillSymlink,
   joinPromptSections,
+  buildWakeContextNote,
   ensurePathInEnv,
   readPaperclipRuntimeSkillEntries,
   resolvePaperclipDesiredSkillNames,
@@ -298,12 +299,14 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       ? renderTemplate(bootstrapPromptTemplate, templateData).trim()
       : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
+  const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
   const paperclipEnvNote = renderPaperclipEnvNote(env);
   const apiAccessNote = renderApiAccessNote(env);
   const prompt = joinPromptSections([
     instructionsPrefix,
     renderedBootstrapPrompt,
     sessionHandoffNote,
+    wakeContextNote,
     paperclipEnvNote,
     apiAccessNote,
     renderedPrompt,

@@ -10,6 +10,7 @@ import {
   parseObject,
   buildPaperclipEnv,
   joinPromptSections,
+  buildWakeContextNote,
   redactEnvForLogs,
   ensureAbsoluteDirectory,
   ensureCommandResolvable,
@@ -300,10 +301,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     !canResumeSession && bootstrapPromptTemplate.trim().length > 0
       ? renderTemplate(bootstrapPromptTemplate, templateData).trim()
       : "";
+  const wakeContextNote = sessionId ? buildWakeContextNote(context) : "";
   const sessionHandoffNote = asString(context.paperclipSessionHandoffMarkdown, "").trim();
   const userPrompt = joinPromptSections([
     renderedBootstrapPrompt,
     sessionHandoffNote,
+    wakeContextNote,
     renderedHeartbeatPrompt,
   ]);
   const promptMetrics = {
