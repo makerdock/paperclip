@@ -4,7 +4,6 @@ import { accessApi } from "../api/access";
 import { ApiError } from "../api/client";
 import { approvalsApi } from "../api/approvals";
 import { dashboardApi } from "../api/dashboard";
-import { isConversationIssue } from "../api/conversations";
 import { heartbeatsApi } from "../api/heartbeats";
 import { issuesApi } from "../api/issues";
 import { queryKeys } from "../lib/queryKeys";
@@ -79,14 +78,13 @@ export function useInboxBadge(companyId: string | null | undefined) {
       issuesApi.list(companyId!, {
         touchedByUserId: "me",
         status: INBOX_ISSUE_STATUSES,
+        kind: "task",
       }),
     enabled: !!companyId,
   });
 
   const unreadIssues = useMemo(
-    () => getUnreadTouchedIssues(getRecentTouchedIssues(touchedIssues)).filter(
-      i => !isConversationIssue(i)
-    ),
+    () => getUnreadTouchedIssues(getRecentTouchedIssues(touchedIssues)),
     [touchedIssues],
   );
 

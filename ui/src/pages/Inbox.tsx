@@ -7,7 +7,6 @@ import { ApiError } from "../api/client";
 import { dashboardApi } from "../api/dashboard";
 import { issuesApi } from "../api/issues";
 import { agentsApi } from "../api/agents";
-import { isConversationIssue } from "../api/conversations";
 import { heartbeatsApi } from "../api/heartbeats";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
@@ -446,6 +445,7 @@ export function Inbox() {
       issuesApi.list(selectedCompanyId!, {
         touchedByUserId: "me",
         status: "backlog,todo,in_progress,in_review,blocked,done",
+        kind: "task",
       }),
     enabled: !!selectedCompanyId,
   });
@@ -457,7 +457,7 @@ export function Inbox() {
   });
 
   const touchedIssues = useMemo(
-    () => getRecentTouchedIssues(touchedIssuesRaw).filter(i => !isConversationIssue(i)),
+    () => getRecentTouchedIssues(touchedIssuesRaw),
     [touchedIssuesRaw],
   );
   const unreadTouchedIssues = useMemo(
