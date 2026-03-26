@@ -69,6 +69,7 @@ interface ConversationListProps {
   onSelect: (issueId: string) => void;
   onNew: () => void;
   onArchive: (issueId: string) => void;
+  onRename: (issueId: string, agentLabel: string, topic: string) => Promise<void>;
 }
 
 function ConversationList({
@@ -82,6 +83,7 @@ function ConversationList({
   onSelect,
   onNew,
   onArchive,
+  onRename,
 }: ConversationListProps) {
   const agentMap = useMemo(
     () => new Map(agents.map((a) => [a.id, a])),
@@ -234,7 +236,7 @@ function ConversationList({
                           if (!renameCommitted.current && editDraft.trim()) {
                             renameCommitted.current = true;
                             const agentLabel = agent?.name ?? label;
-                            await renameConversation(issue.id, agentLabel, editDraft.trim());
+                            await onRename(issue.id, agentLabel, editDraft.trim());
                             onSelect(issue.id);
                           }
                           setEditingId(null);
@@ -245,7 +247,7 @@ function ConversationList({
                         if (!renameCommitted.current && editDraft.trim()) {
                           renameCommitted.current = true;
                           const agentLabel = agent?.name ?? label;
-                          await renameConversation(issue.id, agentLabel, editDraft.trim());
+                          await onRename(issue.id, agentLabel, editDraft.trim());
                           onSelect(issue.id);
                         }
                         setEditingId(null);
@@ -631,7 +633,7 @@ function ConversationView({ issueId, companyId, agents, onClose }: ConversationV
       activeRun.startedAt ?? activeRun.createdAt,
     ).getTime();
     return commentsWithRunMeta.filter(
-      (c) => new Date(c.createdAt).getTime() < runStart,
+      (c) => !c.authorAgentId || new Date(c.createdAt).getTime() < runStart,
     );
   }, [commentsWithRunMeta, activeRun]);
 
@@ -878,23 +880,22 @@ export function Conversations() {
 
   const handleArchive = useCallback(
     async (issueId: string) => {
-      // Clear UI state immediately so the panel closes on first click
-      if (activeIssueId === issueId) {
-        setActiveIssueId(null);
-        setViewMode("list");
-        navigate("/conversations", { replace: true });
-      }
       try {
         await issuesApi.update(issueId, { status: "done" });
       } catch {
         pushToast({ title: "Failed to close conversation", tone: "error" });
         return;
       }
+      if (activeIssueId === issueId) {
+        setActiveIssueId(null);
+        setViewMode("list");
+        navigate("/conversations", { replace: true });
+      }
       queryClient.invalidateQueries({
         queryKey: queryKeys.conversations.list(selectedCompanyId!),
       });
     },
-    [activeIssueId, selectedCompanyId, queryClient, navigate],
+    [activeIssueId, selectedCompanyId, queryClient, navigate, pushToast],
   );
 
   // Loading state
@@ -927,6 +928,11 @@ export function Conversations() {
           onSelect={handleSelect}
           onNew={handleNew}
           onArchive={handleArchive}
+          onRename={async (issueId, agentLabel, topic) => {
+            await renameConversation(issueId, agentLabel, topic);
+            queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(issueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.conversations.list(selectedCompanyId!) });
+          }}
         />
       </div>
 

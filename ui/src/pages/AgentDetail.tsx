@@ -528,6 +528,7 @@ export function AgentDetail() {
   const { companies, selectedCompanyId, setSelectedCompanyId } = useCompany();
   const { closePanel } = usePanel();
   const { openNewIssue } = useDialog();
+  const { pushToast } = useToast();
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -840,6 +841,8 @@ export function AgentDetail() {
                 try {
                   const issue = await ensureConversation(selectedCompanyId, agent.id, agent.name);
                   navigate(`/conversations/${issue.id}`);
+                } catch {
+                  pushToast({ title: "Failed to start conversation", tone: "error" });
                 } finally {
                   setStartingChat(false);
                 }
