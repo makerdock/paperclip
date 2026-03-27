@@ -124,6 +124,11 @@ export const queryKeys = {
   liveRuns: (companyId: string) => ["live-runs", companyId] as const,
   runIssues: (runId: string) => ["run-issues", runId] as const,
   org: (companyId: string) => ["org", companyId] as const,
+  conversations: {
+    list: (companyId: string) => ["conversations", companyId] as const,
+    unread: (companyId: string) => ["conversations", companyId, "unread"] as const,
+    liveRuns: (companyId: string) => ["conversations", companyId, "live-runs"] as const,
+  },
   skills: {
     available: ["skills", "available"] as const,
   },

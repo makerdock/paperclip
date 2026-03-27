@@ -604,6 +604,7 @@ export function Inbox() {
       issuesApi.list(selectedCompanyId!, {
         touchedByUserId: "me",
         status: INBOX_ISSUE_STATUSES,
+        kind: "task",
       }),
     enabled: !!selectedCompanyId,
   });

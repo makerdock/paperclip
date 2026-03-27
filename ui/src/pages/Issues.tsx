@@ -80,7 +80,7 @@ export function Issues() {
 
   const { data: issues, isLoading, error } = useQuery({
     queryKey: [...queryKeys.issues.list(selectedCompanyId!), "participant-agent", participantAgentId ?? "__all__"],
-    queryFn: () => issuesApi.list(selectedCompanyId!, { participantAgentId }),
+    queryFn: () => issuesApi.list(selectedCompanyId!, { participantAgentId, kind: "task" }),
     enabled: !!selectedCompanyId,
   });
 

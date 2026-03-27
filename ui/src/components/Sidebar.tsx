@@ -11,6 +11,7 @@ import {
   Boxes,
   Repeat,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarSection } from "./SidebarSection";
@@ -22,6 +23,7 @@ import { useCompany } from "../context/CompanyContext";
 import { heartbeatsApi } from "../api/heartbeats";
 import { queryKeys } from "../lib/queryKeys";
 import { useInboxBadge } from "../hooks/useInboxBadge";
+import { useConversationUnread } from "../hooks/useConversationUnread";
 import { Button } from "@/components/ui/button";
 import { PluginSlotOutlet } from "@/plugins/slots";
 
@@ -36,6 +38,7 @@ export function Sidebar() {
     refetchInterval: 10_000,
   });
   const liveRunCount = liveRuns?.length ?? 0;
+  const { unreadCount: unreadConvoCount } = useConversationUnread(selectedCompanyId);
 
   function openSearch() {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
@@ -80,6 +83,7 @@ export function Sidebar() {
             <span className="truncate">New Issue</span>
           </button>
           <SidebarNavItem to="/dashboard" label="Dashboard" icon={LayoutDashboard} liveCount={liveRunCount} />
+          <SidebarNavItem to="/conversations" label="Conversations" icon={MessageSquare} badge={unreadConvoCount || undefined} />
           <SidebarNavItem
             to="/inbox"
             label="Inbox"
