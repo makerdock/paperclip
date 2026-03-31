@@ -13,7 +13,7 @@ import { formatDateTime } from "../lib/utils";
 import { restoreSubmittedCommentDraft } from "../lib/comment-submit-draft";
 import { PluginSlotOutlet } from "@/plugins/slots";
 
-interface CommentWithRunMeta extends IssueComment {
+export interface CommentWithRunMeta extends IssueComment {
   runId?: string | null;
   runAgentId?: string | null;
   clientId?: string;
@@ -54,11 +54,21 @@ interface CommentThreadProps {
   currentAssigneeValue?: string;
   suggestedAssigneeValue?: string;
   mentions?: MentionOption[];
+  submitLabel?: string;
+  placeholder?: string;
+  stickyInput?: boolean;
+  hideReopen?: boolean;
+  hideHeader?: boolean;
+  emptyState?: React.ReactNode;
   onInterruptQueued?: (runId: string) => Promise<void>;
   interruptingQueuedRunId?: string | null;
 }
 
 const DRAFT_DEBOUNCE_MS = 800;
+
+const DEFAULT_EMPTY_STATE = (
+  <p className="text-sm text-muted-foreground">No comments or runs yet.</p>
+);
 
 function loadDraft(draftKey: string): string {
   try {
@@ -248,15 +258,17 @@ const TimelineList = memo(function TimelineList({
   companyId,
   projectId,
   highlightCommentId,
+  emptyState = DEFAULT_EMPTY_STATE,
 }: {
   timeline: TimelineItem[];
   agentMap?: Map<string, Agent>;
   companyId?: string | null;
   projectId?: string | null;
   highlightCommentId?: string | null;
+  emptyState?: React.ReactNode;
 }) {
   if (timeline.length === 0) {
-    return <p className="text-sm text-muted-foreground">No comments or runs yet.</p>;
+    return emptyState ? <>{emptyState}</> : null;
   }
 
   return (
@@ -324,6 +336,12 @@ export function CommentThread({
   currentAssigneeValue = "",
   suggestedAssigneeValue,
   mentions: providedMentions,
+  submitLabel,
+  placeholder: placeholderProp,
+  stickyInput = false,
+  hideReopen = false,
+  hideHeader = false,
+  emptyState,
   onInterruptQueued,
   interruptingQueuedRunId = null,
 }: CommentThreadProps) {
@@ -467,7 +485,9 @@ export function CommentThread({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold">Comments &amp; Runs ({timeline.length + queuedComments.length})</h3>
+      {!hideHeader && (
+        <h3 className="text-sm font-semibold">Comments &amp; Runs ({timeline.length + queuedComments.length})</h3>
+      )}
 
       {timeline.length > 0 ? (
         <TimelineList
@@ -476,8 +496,18 @@ export function CommentThread({
           companyId={companyId}
           projectId={projectId}
           highlightCommentId={highlightCommentId}
+          emptyState={emptyState}
         />
-      ) : null}
+      ) : (
+        <TimelineList
+          timeline={timeline}
+          agentMap={agentMap}
+          companyId={companyId}
+          projectId={projectId}
+          highlightCommentId={highlightCommentId}
+          emptyState={emptyState}
+        />
+      )}
 
       {liveRunSlot}
 
@@ -515,12 +545,12 @@ export function CommentThread({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className={stickyInput ? "space-y-2 sticky bottom-0 bg-background pt-2 pb-1" : "space-y-2"}>
         <MarkdownEditor
           ref={editorRef}
           value={body}
           onChange={setBody}
-          placeholder="Leave a comment..."
+          placeholder={placeholderProp ?? "Leave a comment..."}
           mentions={mentions}
           onSubmit={handleSubmit}
           imageUploadHandler={imageUploadHandler}
@@ -547,15 +577,17 @@ export function CommentThread({
               </Button>
             </div>
           )}
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={reopen}
-              onChange={(e) => setReopen(e.target.checked)}
-              className="rounded border-border"
-            />
-            Re-open
-          </label>
+          {!hideReopen && (
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={reopen}
+                onChange={(e) => setReopen(e.target.checked)}
+                className="rounded border-border"
+              />
+              Re-open
+            </label>
+          )}
           {enableReassign && reassignOptions.length > 0 && (
             <InlineEntitySelector
               value={reassignTarget}
@@ -595,7 +627,7 @@ export function CommentThread({
             />
           )}
           <Button size="sm" disabled={!canSubmit} onClick={handleSubmit}>
-            {submitting ? "Posting..." : "Comment"}
+            {submitting ? "Posting..." : (submitLabel ?? "Comment")}
           </Button>
         </div>
       </div>
